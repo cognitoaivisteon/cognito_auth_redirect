@@ -1,153 +1,280 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Car - Phone Connection</title>
+    <title>Gmail Calendar Access</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body { 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-            padding: 20px; 
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
+        
         .container { 
-            max-width: 400px; 
-            margin: 50px auto; 
+            max-width: 500px; 
+            width: 100%;
             background: white; 
             padding: 40px; 
             border-radius: 20px; 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
         }
-        .car-icon { 
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .icon { 
             font-size: 60px; 
-            text-align: center; 
             margin-bottom: 20px; 
-            animation: bounce 2s infinite;
+            animation: pulse 2s infinite;
         }
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
+        
+        h1 { 
+            color: #333; 
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+        }
+        
         .button { 
             background: linear-gradient(45deg, #4285f4, #34a853); 
             color: white; 
-            padding: 15px 30px; 
+            padding: 16px 32px; 
             border: none; 
             border-radius: 12px; 
             font-size: 16px; 
+            font-weight: 500;
             width: 100%; 
             margin: 15px 0; 
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
+        
         .button:hover {
             transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(66, 133, 244, 0.3);
         }
+        
+        .button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
         .status { 
             padding: 20px; 
             border-radius: 12px; 
             margin: 20px 0; 
             text-align: center; 
+            font-weight: 500;
         }
+        
         .success { 
             background: #d4edda; 
             color: #155724; 
             border: 2px solid #c3e6cb;
         }
+        
         .loading { 
             background: #d1ecf1; 
             color: #0c5460; 
             border: 2px solid #b8daff;
         }
+        
         .error {
             background: #f8d7da;
             color: #721c24;
             border: 2px solid #f5c6cb;
         }
-        h1 { 
-            text-align: center; 
-            color: #333; 
-            margin-bottom: 30px;
-        }
+        
         .user-info {
             background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border-left: 4px solid #007bff;
+        }
+        
+        .data-info {
+            background: #e7f3ff;
             padding: 15px;
             border-radius: 8px;
             margin: 15px 0;
+            font-size: 14px;
         }
-        #g_id_onload {
-            position: absolute;
-            top: -1000px;
-            left: -1000px;
+        
+        .section {
+            display: none;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .client-id-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        
+        .client-id-input:focus {
+            outline: none;
+            border-color: #4285f4;
+        }
+        
+        .setup-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="car-icon">🚗</div>
-        <h1>Connect to Your Car</h1>
-        
-        <div id="login-section">
-            <p>Sign in with Google to connect your Gmail and Calendar to your car.</p>
-            <div id="g_id_onload"
-                 data-client_id="YOUR_CLIENT_ID.googleusercontent.com"
-                 data-callback="handleGoogleSignIn"
-                 data-auto_prompt="false">
-            </div>
-            <div class="g_id_signin" 
-                 data-type="standard"
-                 data-size="large"
-                 data-theme="outline"
-                 data-text="sign_in_with"
-                 data-shape="rectangular"
-                 data-logo_alignment="left"
-                 data-width="100%">
-            </div>
-            <button class="button" onclick="triggerGoogleSignIn()" style="margin-top: 20px;">
-                🔐 Sign in with Google
-            </button>
-        </div>
-        
-        <div id="connected-section" style="display: none;">
-            <div class="status success">
-                <strong>✅ Connected to Car!</strong><br>
-                Your car can now access your Gmail and Calendar.
-            </div>
-            <div class="user-info">
-                <strong>Connected as:</strong><br>
-                <span id="user-name"></span><br>
-                <span id="user-email"></span>
-            </div>
-            <div id="data-status"></div>
-            <button class="button" onclick="refreshData()">🔄 Refresh Data</button>
-            <button class="button" onclick="disconnect()" style="background: #dc3545;">
-                🔌 Disconnect
-            </button>
-        </div>
-        
-        <div id="loading-section" style="display: none;">
-            <div class="status loading">
-                <strong>🔄 Connecting to Google...</strong><br>
-                Please wait while we authenticate your account.
-            </div>
-        </div>
 
-        <div id="error-section" style="display: none;">
+        
+        <!-- Login Section -->
+        <div id="login-section" class="section active">
+            <div class="header">
+                <div class="icon">📧</div>
+                <h1>Connect Your Account</h1>
+                <p class="subtitle">Access your Gmail and Calendar data</p>
+            </div>
+            
+            <button class="button" onclick="signInWithGoogle()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                Sign in with Google
+            </button>
+        </div>
+        
+        <!-- Loading Section -->
+        <div id="loading-section" class="section">
+            <div class="status loading">
+                <div class="spinner"></div>
+                <strong>Connecting...</strong><br>
+                Please wait while we authenticate your account
+            </div>
+        </div>
+        
+        <!-- Connected Section -->
+        <div id="connected-section" class="section">
+            <div class="header">
+                <div class="icon">✅</div>
+                <h1>Successfully Connected!</h1>
+            </div>
+            
+            <div class="status success">
+                <strong>🎉 Authentication Complete!</strong><br>
+                Your Gmail and Calendar data is now accessible
+            </div>
+            
+            <div class="user-info">
+                <strong>👤 Connected Account:</strong><br>
+                <span id="user-name" style="font-size: 16px; color: #007bff;"></span><br>
+                <span id="user-email" style="color: #666;"></span>
+            </div>
+            
+            <div id="data-status" class="data-info"></div>
+            
+            <button class="button" onclick="refreshData()">
+                🔄 Refresh Data
+            </button>
+            
+            <button class="button" onclick="viewData()" style="background: linear-gradient(45deg, #28a745, #20c997);">
+                👀 View Data
+            </button>
+            
+            <button class="button" onclick="disconnect()" style="background: #dc3545;">
+                🔌 Disconnect Account
+            </button>
+        </div>
+        
+        <!-- Data View Section -->
+        <div id="data-section" class="section">
+            <div class="header">
+                <div class="icon">📊</div>
+                <h1>Your Data</h1>
+            </div>
+            
+            <div id="gmail-data"></div>
+            <div id="calendar-data"></div>
+            
+            <button class="button" onclick="showConnected()">
+                ← Back to Dashboard
+            </button>
+        </div>
+        
+        <!-- Error Section -->
+        <div id="error-section" class="section">
             <div class="status error">
                 <strong>❌ Connection Failed</strong><br>
                 <span id="error-message"></span>
             </div>
-            <button class="button" onclick="showLoginState()">Try Again</button>
+            <button class="button" onclick="showLogin()">
+                🔄 Try Again
+            </button>
         </div>
     </div>
 
     <script>
-        // Replace with your actual Google OAuth Client ID
+        // ⚠️ DEVELOPER: Replace this with your actual Google OAuth Client ID
         const CLIENT_ID = '840725329059-o6g0m383kuqcp8qgscbuho592p1oorbj.apps.googleusercontent.com';
         
-        // Scopes for Gmail and Calendar access
+        let accessToken = null;
+        let userInfo = null;
+        
+        // OAuth scopes for Gmail and Calendar
         const SCOPES = [
             'https://www.googleapis.com/auth/gmail.readonly',
             'https://www.googleapis.com/auth/calendar.readonly',
@@ -155,215 +282,152 @@
             'https://www.googleapis.com/auth/userinfo.email'
         ].join(' ');
         
-        let accessToken = null;
-        let userInfo = null;
+        // Initialize on page load
+        window.onload = function() {
+            // Check for existing connection or OAuth callback
+            checkAuthStatus();
+        };
+
         
-        // Handle Google Sign-In response (new method)
-        function handleGoogleSignIn(response) {
-            if (response.credential) {
-                showLoadingState();
-                
-                // Decode the JWT token to get user info
-                const userInfoFromJWT = parseJWT(response.credential);
-                userInfo = {
-                    name: userInfoFromJWT.name,
-                    email: userInfoFromJWT.email,
-                    picture: userInfoFromJWT.picture
-                };
-                
-                // Now get access token for API calls
-                getAccessToken();
-            } else {
-                showError('Sign-in failed. Please try again.');
-            }
-        }
-        
-        // Alternative sign-in trigger
-        function triggerGoogleSignIn() {
-            showLoadingState();
+        // Check authentication status
+        function checkAuthStatus() {
+            // First check URL for OAuth callback
+            checkOAuthCallback();
             
-            // Use OAuth 2.0 flow for getting access tokens
-            const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` + 
-                `client_id=${CLIENT_ID}&` +
-                `response_type=token&` +
-                `scope=${encodeURIComponent(SCOPES)}&` +
-                `redirect_uri=${encodeURIComponent(window.location.origin + window.location.pathname)}`;
-                
-            window.location.href = authUrl;
-        }
-        
-        // Get access token for API calls
-        function getAccessToken() {
-            // Use the newer OAuth 2.0 implicit flow
-            const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` + 
-                `client_id=${CLIENT_ID}&` +
-                `response_type=token&` +
-                `scope=${encodeURIComponent(SCOPES)}&` +
-                `redirect_uri=${encodeURIComponent(window.location.origin + window.location.pathname)}&` +
-                `include_granted_scopes=true&` +
-                `state=auth`;
-                
-            window.location.href = authUrl;
-        }
-        
-        // Parse JWT token
-        function parseJWT(token) {
-            try {
-                const base64Url = token.split('.')[1];
-                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                }).join(''));
-                return JSON.parse(jsonPayload);
-            } catch (error) {
-                console.error('Error parsing JWT:', error);
-                return {};
+            // Then check saved token
+            const savedConnection = localStorage.getItem('oauth_connection');
+            if (savedConnection && !accessToken) {
+                try {
+                    const connection = JSON.parse(savedConnection);
+                    accessToken = connection.accessToken;
+                    userInfo = connection.userInfo;
+                    
+                    if (accessToken && userInfo) {
+                        showConnected();
+                        startDataSync();
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Error loading saved connection:', error);
+                }
+            }
+            
+            // Show login if no valid connection
+            if (!accessToken) {
+                showLogin();
             }
         }
         
-        // Check for access token in URL (OAuth redirect)
-        function checkForAccessToken() {
+        // Check for OAuth callback in URL
+        function checkOAuthCallback() {
             const urlParams = new URLSearchParams(window.location.hash.substring(1));
             const token = urlParams.get('access_token');
-            const state = urlParams.get('state');
+            const error = urlParams.get('error');
             
-            if (token && state === 'auth') {
+            if (error) {
+                showError('Authentication failed: ' + error);
+                return;
+            }
+            
+            if (token) {
                 accessToken = token;
                 
-                // Clean up URL
+                // Clean URL
                 window.history.replaceState({}, document.title, window.location.pathname);
                 
-                // Get user info if we don't have it
-                if (!userInfo) {
-                    getUserInfo(token);
-                } else {
-                    saveConnectionData();
-                    showConnectedState();
-                    startDataSync();
-                }
+                // Get user info
+                showLoading();
+                getUserInfo();
             }
         }
         
-        // Get user info from Google API
-        function getUserInfo(token) {
+        // Start Google OAuth flow
+        function signInWithGoogle() {
+            if (!CLIENT_ID || CLIENT_ID === 'YOUR_CLIENT_ID_HERE.googleusercontent.com') {
+                showError('Developer Error: CLIENT_ID not configured in code');
+                return;
+            }
+            
+            const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' + 
+                new URLSearchParams({
+                    client_id: CLIENT_ID,
+                    response_type: 'token',
+                    scope: SCOPES,
+                    redirect_uri: window.location.origin + window.location.pathname,
+                    state: 'oauth_flow',
+                    include_granted_scopes: 'true'
+                });
+            
+            window.location.href = authUrl;
+        }
+        
+        // Get user information
+        function getUserInfo() {
             fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': 'Bearer ' + accessToken
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to get user info');
+                }
+                return response.json();
+            })
             .then(data => {
                 userInfo = data;
-                saveConnectionData();
-                showConnectedState();
+                saveConnection();
+                showConnected();
                 startDataSync();
             })
             .catch(error => {
                 console.error('Error getting user info:', error);
-                showError('Failed to get user information.');
+                showError('Failed to get user information: ' + error.message);
             });
         }
         
-        // Save connection data to localStorage
-        function saveConnectionData() {
+        // Save connection data
+        function saveConnection() {
             const connectionData = {
                 accessToken: accessToken,
                 userInfo: userInfo,
-                connectedTime: Date.now()
+                timestamp: Date.now()
             };
-            
-            localStorage.setItem('connection_data', JSON.stringify(connectionData));
-            localStorage.setItem('access_token', accessToken);
-            localStorage.setItem('user_email', userInfo.email);
-            localStorage.setItem('user_name', userInfo.name);
+            localStorage.setItem('oauth_connection', JSON.stringify(connectionData));
         }
         
-        // Show different states
-        function showLoginState() {
-            document.getElementById('login-section').style.display = 'block';
-            document.getElementById('connected-section').style.display = 'none';
-            document.getElementById('loading-section').style.display = 'none';
-            document.getElementById('error-section').style.display = 'none';
-        }
-        
-        function showLoadingState() {
-            document.getElementById('login-section').style.display = 'none';
-            document.getElementById('connected-section').style.display = 'none';
-            document.getElementById('loading-section').style.display = 'block';
-            document.getElementById('error-section').style.display = 'none';
-        }
-        
-        function showConnectedState() {
-            document.getElementById('login-section').style.display = 'none';
-            document.getElementById('connected-section').style.display = 'block';
-            document.getElementById('loading-section').style.display = 'none';
-            document.getElementById('error-section').style.display = 'none';
-            
-            if (userInfo) {
-                document.getElementById('user-name').textContent = userInfo.name;
-                document.getElementById('user-email').textContent = userInfo.email;
-            }
-        }
-        
-        function showError(message) {
-            document.getElementById('login-section').style.display = 'none';
-            document.getElementById('connected-section').style.display = 'none';
-            document.getElementById('loading-section').style.display = 'none';
-            document.getElementById('error-section').style.display = 'block';
-            document.getElementById('error-message').textContent = message;
-        }
-        
-        // Start syncing data for car
+        // Start data synchronization
         function startDataSync() {
-            if (!accessToken) return;
+            updateDataStatus('🔄 Loading your data...');
             
-            updateDataStatus('🔄 Syncing data...');
-            
-            // Fetch Gmail and Calendar data
             Promise.all([
                 fetchGmailData(),
                 fetchCalendarData()
-            ]).then(() => {
-                updateDataStatus('✅ Data synced successfully');
-                
-                // Refresh data every 30 seconds
-                setInterval(() => {
-                    if (accessToken) {
-                        fetchGmailData();
-                        fetchCalendarData();
-                    }
-                }, 30000);
-            }).catch(error => {
-                updateDataStatus('❌ Failed to sync data');
+            ])
+            .then(() => {
+                updateDataStatus('✅ Data loaded successfully! Gmail and Calendar data is now available.');
+            })
+            .catch(error => {
+                updateDataStatus('⚠️ Partial data loaded. Some services may be unavailable.');
                 console.error('Sync error:', error);
             });
-        }
-        
-        // Update data status display
-        function updateDataStatus(message) {
-            document.getElementById('data-status').innerHTML = 
-                `<div style="padding: 10px; background: #f8f9fa; border-radius: 8px; margin: 10px 0; text-align: center;">
-                    ${message}
-                </div>`;
         }
         
         // Fetch Gmail data
         function fetchGmailData() {
             return fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=10&q=is:unread', {
                 headers: {
-                    'Authorization': `Bearer ${accessToken}`
+                    'Authorization': 'Bearer ' + accessToken
                 }
             })
             .then(response => {
-                if (!response.ok) throw new Error('Gmail API error');
+                if (!response.ok) throw new Error('Gmail API error: ' + response.status);
                 return response.json();
             })
             .then(data => {
                 localStorage.setItem('gmail_data', JSON.stringify(data));
-                console.log('Gmail data synced:', data.messages?.length || 0, 'unread messages');
-            })
-            .catch(error => {
-                console.error('Gmail sync error:', error);
+                console.log('Gmail data loaded:', data.messages?.length || 0, 'unread messages');
+                return data;
             });
         }
         
@@ -372,88 +436,129 @@
             const now = new Date().toISOString();
             return fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${now}&maxResults=10&singleEvents=true&orderBy=startTime`, {
                 headers: {
-                    'Authorization': `Bearer ${accessToken}`
+                    'Authorization': 'Bearer ' + accessToken
                 }
             })
             .then(response => {
-                if (!response.ok) throw new Error('Calendar API error');
+                if (!response.ok) throw new Error('Calendar API error: ' + response.status);
                 return response.json();
             })
             .then(data => {
                 localStorage.setItem('calendar_data', JSON.stringify(data));
-                console.log('Calendar data synced:', data.items?.length || 0, 'upcoming events');
-            })
-            .catch(error => {
-                console.error('Calendar sync error:', error);
+                console.log('Calendar data loaded:', data.items?.length || 0, 'upcoming events');
+                return data;
             });
         }
         
-        // Refresh data manually
+        // Refresh data
         function refreshData() {
             if (accessToken) {
                 startDataSync();
             }
         }
         
+        // View data
+        function viewData() {
+            const gmailData = JSON.parse(localStorage.getItem('gmail_data') || '{}');
+            const calendarData = JSON.parse(localStorage.getItem('calendar_data') || '{}');
+            
+            // Display Gmail data
+            const gmailContainer = document.getElementById('gmail-data');
+            const gmailMessages = gmailData.messages || [];
+            gmailContainer.innerHTML = `
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <h3>📧 Gmail (${gmailMessages.length} unread messages)</h3>
+                    ${gmailMessages.length > 0 ? 
+                        '<ul>' + gmailMessages.slice(0, 5).map(msg => 
+                            `<li>Message ID: ${msg.id}</li>`
+                        ).join('') + '</ul>' : 
+                        '<p>No unread messages</p>'
+                    }
+                </div>
+            `;
+            
+            // Display Calendar data
+            const calendarContainer = document.getElementById('calendar-data');
+            const calendarEvents = calendarData.items || [];
+            calendarContainer.innerHTML = `
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <h3>📅 Calendar (${calendarEvents.length} upcoming events)</h3>
+                    ${calendarEvents.length > 0 ? 
+                        '<ul>' + calendarEvents.slice(0, 5).map(event => 
+                            `<li><strong>${event.summary || 'No title'}</strong><br>
+                             <small>${event.start?.dateTime || event.start?.date || 'No date'}</small></li>`
+                        ).join('') + '</ul>' : 
+                        '<p>No upcoming events</p>'
+                    }
+                </div>
+            `;
+            
+            showSection('data-section');
+        }
+        
         // Disconnect
         function disconnect() {
-            // Clear all stored data
-            localStorage.removeItem('connection_data');
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('user_email');
-            localStorage.removeItem('user_name');
-            localStorage.removeItem('gmail_data');
-            localStorage.removeItem('calendar_data');
-            
-            // Reset variables
-            accessToken = null;
-            userInfo = null;
-            
-            // Show login state
-            showLoginState();
-            
-            // Revoke token (optional)
-            if (accessToken) {
-                fetch(`https://oauth2.googleapis.com/revoke?token=${accessToken}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                });
+            if (confirm('Are you sure you want to disconnect? This will remove all stored data.')) {
+                // Revoke token
+                if (accessToken) {
+                    fetch(`https://oauth2.googleapis.com/revoke?token=${accessToken}`, {
+                        method: 'POST'
+                    }).catch(error => console.log('Token revoke error:', error));
+                }
+                
+                // Clear all data
+                localStorage.removeItem('oauth_connection');
+                localStorage.removeItem('gmail_data');
+                localStorage.removeItem('calendar_data');
+                
+                accessToken = null;
+                userInfo = null;
+                
+                showLogin();
             }
         }
         
-        // Check existing connection on page load
-        window.onload = function() {
-            // First check if we're returning from OAuth
-            checkForAccessToken();
-            
-            // Then check if we have saved connection
-            const savedConnection = localStorage.getItem('connection_data');
-            if (savedConnection && !accessToken) {
-                try {
-                    const connectionData = JSON.parse(savedConnection);
-                    accessToken = connectionData.accessToken;
-                    userInfo = connectionData.userInfo;
-                    
-                    // Check if token is still valid (simple check)
-                    if (accessToken && userInfo) {
-                        showConnectedState();
-                        startDataSync();
-                    } else {
-                        showLoginState();
-                    }
-                } catch (error) {
-                    console.error('Error loading saved connection:', error);
-                    showLoginState();
-                }
-            } else if (!accessToken) {
-                showLoginState();
+        // Update data status
+        function updateDataStatus(message) {
+            const statusElement = document.getElementById('data-status');
+            if (statusElement) {
+                statusElement.innerHTML = message;
             }
-        };
+        }
+        
+        // Show different sections
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+        }
+
+        
+        function showLogin() {
+            if (userInfo) {
+                document.getElementById('user-name').textContent = userInfo.name;
+                document.getElementById('user-email').textContent = userInfo.email;
+            }
+            showSection('login-section');
+        }
+        
+        function showLoading() {
+            showSection('loading-section');
+        }
+        
+        function showConnected() {
+            if (userInfo) {
+                document.getElementById('user-name').textContent = userInfo.name;
+                document.getElementById('user-email').textContent = userInfo.email;
+            }
+            showSection('connected-section');
+        }
+        
+        function showError(message) {
+            document.getElementById('error-message').textContent = message;
+            showSection('error-section');
+        }
     </script>
-    
-    <!-- Google Identity Services -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </body>
 </html>
