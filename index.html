@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Gmail Calendar Access</title>
+    <title>Device Authentication</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         * {
@@ -21,17 +21,13 @@
         }
         
         .container { 
-            max-width: 500px; 
+            max-width: 450px; 
             width: 100%;
             background: white; 
             padding: 40px; 
             border-radius: 20px; 
             box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-        }
-        
-        .header {
             text-align: center;
-            margin-bottom: 30px;
         }
         
         .icon { 
@@ -55,6 +51,7 @@
         .subtitle {
             color: #666;
             font-size: 16px;
+            margin-bottom: 30px;
         }
         
         .button { 
@@ -90,7 +87,6 @@
             padding: 20px; 
             border-radius: 12px; 
             margin: 20px 0; 
-            text-align: center; 
             font-weight: 500;
         }
         
@@ -118,14 +114,7 @@
             border-radius: 12px;
             margin: 20px 0;
             border-left: 4px solid #007bff;
-        }
-        
-        .data-info {
-            background: #e7f3ff;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            font-size: 14px;
+            text-align: left;
         }
         
         .section {
@@ -143,6 +132,7 @@
             border-top: 2px solid transparent;
             border-radius: 50%;
             animation: spin 1s linear infinite;
+            margin: 0 auto;
         }
         
         @keyframes spin {
@@ -150,42 +140,24 @@
             100% { transform: rotate(360deg); }
         }
         
-        .client-id-input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            margin: 10px 0;
-            font-family: monospace;
-        }
-        
-        .client-id-input:focus {
-            outline: none;
-            border-color: #4285f4;
-        }
-        
-        .setup-info {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
+        .token-info {
+            background: #e7f3ff;
             padding: 15px;
             border-radius: 8px;
             margin: 15px 0;
             font-size: 14px;
+            text-align: left;
+            word-break: break-all;
         }
     </style>
 </head>
 <body>
     <div class="container">
-
-        
         <!-- Login Section -->
         <div id="login-section" class="section active">
-            <div class="header">
-                <div class="icon">📧</div>
-                <h1>Connect Your Account</h1>
-                <p class="subtitle">Access your Gmail and Calendar data</p>
-            </div>
+            <div class="icon">🔐</div>
+            <h1>Device Authentication</h1>
+            <p class="subtitle">Sign in to connect your device</p>
             
             <button class="button" onclick="signInWithGoogle()">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -200,65 +172,48 @@
         
         <!-- Loading Section -->
         <div id="loading-section" class="section">
+            <div class="icon">⏳</div>
+            <h1>Authenticating...</h1>
             <div class="status loading">
                 <div class="spinner"></div>
-                <strong>Connecting...</strong><br>
-                Please wait while we authenticate your account
+                <br><strong>Please wait</strong><br>
+                Connecting to your Google account
             </div>
         </div>
         
         <!-- Connected Section -->
         <div id="connected-section" class="section">
-            <div class="header">
-                <div class="icon">✅</div>
-                <h1>Successfully Connected!</h1>
-            </div>
+            <div class="icon">✅</div>
+            <h1>Authentication Complete!</h1>
             
             <div class="status success">
-                <strong>🎉 Authentication Complete!</strong><br>
-                Your Gmail and Calendar data is now accessible
+                <strong>Successfully Connected!</strong><br>
+                Your device can now access your data
             </div>
             
             <div class="user-info">
-                <strong>👤 Connected Account:</strong><br>
+                <strong>Authenticated User:</strong><br>
                 <span id="user-name" style="font-size: 16px; color: #007bff;"></span><br>
                 <span id="user-email" style="color: #666;"></span>
             </div>
             
-            <div id="data-status" class="data-info"></div>
-            
-            <button class="button" onclick="refreshData()">
-                🔄 Refresh Data
-            </button>
-            
-            <button class="button" onclick="viewData()" style="background: linear-gradient(45deg, #28a745, #20c997);">
-                👀 View Data
-            </button>
-            
-            <button class="button" onclick="disconnect()" style="background: #dc3545;">
-                🔌 Disconnect Account
-            </button>
-        </div>
-        
-        <!-- Data View Section -->
-        <div id="data-section" class="section">
-            <div class="header">
-                <div class="icon">📊</div>
-                <h1>Your Data</h1>
+            <div class="token-info">
+                <strong>Status:</strong> Token active and ready<br>
+                <strong>Permissions:</strong> Gmail (read), Calendar (read)<br>
+                <strong>Connected:</strong> <span id="connect-time"></span>
             </div>
             
-            <div id="gmail-data"></div>
-            <div id="calendar-data"></div>
-            
-            <button class="button" onclick="showConnected()">
-                ← Back to Dashboard
+            <button class="button" onclick="disconnect()" style="background: #dc3545;">
+                🔌 Disconnect Device
             </button>
         </div>
         
         <!-- Error Section -->
         <div id="error-section" class="section">
+            <div class="icon">❌</div>
+            <h1>Authentication Failed</h1>
             <div class="status error">
-                <strong>❌ Connection Failed</strong><br>
+                <strong>Connection Error</strong><br>
                 <span id="error-message"></span>
             </div>
             <button class="button" onclick="showLogin()">
@@ -268,13 +223,10 @@
     </div>
 
     <script>
-        // ⚠️ DEVELOPER: Replace this with your actual Google OAuth Client ID
+        // Replace with your actual Google OAuth Client ID
         const CLIENT_ID = '840725329059-o6g0m383kuqcp8qgscbuho592p1oorbj.apps.googleusercontent.com';
         
-        let accessToken = null;
-        let userInfo = null;
-        
-        // OAuth scopes for Gmail and Calendar
+        // Scopes for Gmail and Calendar access
         const SCOPES = [
             'https://www.googleapis.com/auth/gmail.readonly',
             'https://www.googleapis.com/auth/calendar.readonly',
@@ -282,20 +234,21 @@
             'https://www.googleapis.com/auth/userinfo.email'
         ].join(' ');
         
+        let accessToken = null;
+        let userInfo = null;
+        
         // Initialize on page load
         window.onload = function() {
-            // Check for existing connection or OAuth callback
             checkAuthStatus();
         };
-
         
         // Check authentication status
         function checkAuthStatus() {
-            // First check URL for OAuth callback
+            // Check URL for OAuth callback
             checkOAuthCallback();
             
-            // Then check saved token
-            const savedConnection = localStorage.getItem('oauth_connection');
+            // Check saved connection
+            const savedConnection = localStorage.getItem('device_auth');
             if (savedConnection && !accessToken) {
                 try {
                     const connection = JSON.parse(savedConnection);
@@ -304,15 +257,14 @@
                     
                     if (accessToken && userInfo) {
                         showConnected();
-                        startDataSync();
                         return;
                     }
                 } catch (error) {
                     console.error('Error loading saved connection:', error);
+                    localStorage.removeItem('device_auth');
                 }
             }
             
-            // Show login if no valid connection
             if (!accessToken) {
                 showLogin();
             }
@@ -344,7 +296,7 @@
         // Start Google OAuth flow
         function signInWithGoogle() {
             if (!CLIENT_ID || CLIENT_ID === 'YOUR_CLIENT_ID_HERE.googleusercontent.com') {
-                showError('Developer Error: CLIENT_ID not configured in code');
+                showError('Developer Error: CLIENT_ID not configured');
                 return;
             }
             
@@ -354,7 +306,7 @@
                     response_type: 'token',
                     scope: SCOPES,
                     redirect_uri: window.location.origin + window.location.pathname,
-                    state: 'oauth_flow',
+                    state: 'device_auth',
                     include_granted_scopes: 'true'
                 });
             
@@ -378,7 +330,6 @@
                 userInfo = data;
                 saveConnection();
                 showConnected();
-                startDataSync();
             })
             .catch(error => {
                 console.error('Error getting user info:', error);
@@ -386,119 +337,25 @@
             });
         }
         
-        // Save connection data
+        // Save connection data - ONLY TOKEN AND USER INFO
         function saveConnection() {
             const connectionData = {
                 accessToken: accessToken,
                 userInfo: userInfo,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                // Device program will use this token to make API calls
+                deviceReady: true
             };
-            localStorage.setItem('oauth_connection', JSON.stringify(connectionData));
-        }
-        
-        // Start data synchronization
-        function startDataSync() {
-            updateDataStatus('🔄 Loading your data...');
             
-            Promise.all([
-                fetchGmailData(),
-                fetchCalendarData()
-            ])
-            .then(() => {
-                updateDataStatus('✅ Data loaded successfully! Gmail and Calendar data is now available.');
-            })
-            .catch(error => {
-                updateDataStatus('⚠️ Partial data loaded. Some services may be unavailable.');
-                console.error('Sync error:', error);
-            });
-        }
-        
-        // Fetch Gmail data
-        function fetchGmailData() {
-            return fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=10&q=is:unread', {
-                headers: {
-                    'Authorization': 'Bearer ' + accessToken
-                }
-            })
-            .then(response => {
-                if (!response.ok) throw new Error('Gmail API error: ' + response.status);
-                return response.json();
-            })
-            .then(data => {
-                localStorage.setItem('gmail_data', JSON.stringify(data));
-                console.log('Gmail data loaded:', data.messages?.length || 0, 'unread messages');
-                return data;
-            });
-        }
-        
-        // Fetch Calendar data
-        function fetchCalendarData() {
-            const now = new Date().toISOString();
-            return fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${now}&maxResults=10&singleEvents=true&orderBy=startTime`, {
-                headers: {
-                    'Authorization': 'Bearer ' + accessToken
-                }
-            })
-            .then(response => {
-                if (!response.ok) throw new Error('Calendar API error: ' + response.status);
-                return response.json();
-            })
-            .then(data => {
-                localStorage.setItem('calendar_data', JSON.stringify(data));
-                console.log('Calendar data loaded:', data.items?.length || 0, 'upcoming events');
-                return data;
-            });
-        }
-        
-        // Refresh data
-        function refreshData() {
-            if (accessToken) {
-                startDataSync();
-            }
-        }
-        
-        // View data
-        function viewData() {
-            const gmailData = JSON.parse(localStorage.getItem('gmail_data') || '{}');
-            const calendarData = JSON.parse(localStorage.getItem('calendar_data') || '{}');
+            // Save for device program to read
+            localStorage.setItem('device_auth', JSON.stringify(connectionData));
             
-            // Display Gmail data
-            const gmailContainer = document.getElementById('gmail-data');
-            const gmailMessages = gmailData.messages || [];
-            gmailContainer.innerHTML = `
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
-                    <h3>📧 Gmail (${gmailMessages.length} unread messages)</h3>
-                    ${gmailMessages.length > 0 ? 
-                        '<ul>' + gmailMessages.slice(0, 5).map(msg => 
-                            `<li>Message ID: ${msg.id}</li>`
-                        ).join('') + '</ul>' : 
-                        '<p>No unread messages</p>'
-                    }
-                </div>
-            `;
-            
-            // Display Calendar data
-            const calendarContainer = document.getElementById('calendar-data');
-            const calendarEvents = calendarData.items || [];
-            calendarContainer.innerHTML = `
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
-                    <h3>📅 Calendar (${calendarEvents.length} upcoming events)</h3>
-                    ${calendarEvents.length > 0 ? 
-                        '<ul>' + calendarEvents.slice(0, 5).map(event => 
-                            `<li><strong>${event.summary || 'No title'}</strong><br>
-                             <small>${event.start?.dateTime || event.start?.date || 'No date'}</small></li>`
-                        ).join('') + '</ul>' : 
-                        '<p>No upcoming events</p>'
-                    }
-                </div>
-            `;
-            
-            showSection('data-section');
+            console.log('Device authentication saved. Token ready for device program.');
         }
         
         // Disconnect
         function disconnect() {
-            if (confirm('Are you sure you want to disconnect? This will remove all stored data.')) {
+            if (confirm('Disconnect your device? This will revoke access to your data.')) {
                 // Revoke token
                 if (accessToken) {
                     fetch(`https://oauth2.googleapis.com/revoke?token=${accessToken}`, {
@@ -507,22 +364,12 @@
                 }
                 
                 // Clear all data
-                localStorage.removeItem('oauth_connection');
-                localStorage.removeItem('gmail_data');
-                localStorage.removeItem('calendar_data');
+                localStorage.removeItem('device_auth');
                 
                 accessToken = null;
                 userInfo = null;
                 
                 showLogin();
-            }
-        }
-        
-        // Update data status
-        function updateDataStatus(message) {
-            const statusElement = document.getElementById('data-status');
-            if (statusElement) {
-                statusElement.innerHTML = message;
             }
         }
         
@@ -533,13 +380,8 @@
             });
             document.getElementById(sectionId).classList.add('active');
         }
-
         
         function showLogin() {
-            if (userInfo) {
-                document.getElementById('user-name').textContent = userInfo.name;
-                document.getElementById('user-email').textContent = userInfo.email;
-            }
             showSection('login-section');
         }
         
@@ -551,6 +393,7 @@
             if (userInfo) {
                 document.getElementById('user-name').textContent = userInfo.name;
                 document.getElementById('user-email').textContent = userInfo.email;
+                document.getElementById('connect-time').textContent = new Date().toLocaleString();
             }
             showSection('connected-section');
         }
