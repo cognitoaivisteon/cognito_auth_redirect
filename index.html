@@ -3,22 +3,31 @@
 <head>
   <title>Google OAuth2 Redirect</title>
   <meta charset="UTF-8">
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    .status { margin-top: 20px; font-size: 1.2em; }
-  </style>
 </head>
 <body>
   <h2>Authenticating with Google...</h2>
-  <p>Please wait while we send your token to the device.</p>
+  <p>Debug info will appear below:</p>
+  <div id="debug"></div>
 
   <script>
+    function log(message, color = "black") {
+      const debug = document.getElementById("debug");
+      const p = document.createElement("p");
+      p.style.color = color;
+      p.textContent = message;
+      debug.appendChild(p);
+    }
+
     window.onload = () => {
       const hash = window.location.hash.substr(1);
+      log("URL fragment: " + hash, "blue");
+
       const params = new URLSearchParams(hash);
       const accessToken = params.get('access_token');
 
       if (accessToken) {
+        log("Access token found: " + accessToken, "green");
+
         const deviceIP = 'http://192.168.0.101:5000/token'; // Replace with your actual device IP
 
         fetch(deviceIP, {
@@ -28,13 +37,13 @@
         })
         .then(res => res.text())
         .then(data => {
-          document.body.innerHTML += `<div class="status" style="color:green;"><strong>✅ Token sent to device:</strong> ${data}</div>`;
+          log("✅ Token sent to device: " + data, "green");
         })
         .catch(err => {
-          document.body.innerHTML += `<div class="status" style="color:red;"><strong>❌ Failed to send token:</strong> ${err}</div>`;
+          log("❌ Failed to send token: " + err, "red");
         });
       } else {
-        document.body.innerHTML += `<div class="status" style="color:red;">❌ No access token found in URL.</div>`;
+        log("❌ No access token found in URL.", "red");
       }
     };
   </script>
