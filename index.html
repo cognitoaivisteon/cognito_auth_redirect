@@ -2,6 +2,11 @@
 <html>
 <head>
   <title>Google OAuth2 Redirect</title>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .status { margin-top: 20px; font-size: 1.2em; }
+  </style>
 </head>
 <body>
   <h2>Authenticating with Google...</h2>
@@ -14,8 +19,7 @@
       const accessToken = params.get('access_token');
 
       if (accessToken) {
-        // Replace with your device's IP address
-        const deviceIP = 'http://192.168.0.101:5000/token';
+        const deviceIP = 'http://192.168.0.101:5000/token'; // Replace with your actual device IP
 
         fetch(deviceIP, {
           method: 'POST',
@@ -24,13 +28,13 @@
         })
         .then(res => res.text())
         .then(data => {
-          document.body.innerHTML += `<p><strong>✅ Token sent to device:</strong> ${data}</p>`;
+          document.body.innerHTML += `<div class="status" style="color:green;"><strong>✅ Token sent to device:</strong> ${data}</div>`;
         })
         .catch(err => {
-          document.body.innerHTML += `<p style="color:red;"><strong>❌ Failed to send token:</strong> ${err}</p>`;
+          document.body.innerHTML += `<div class="status" style="color:red;"><strong>❌ Failed to send token:</strong> ${err}</div>`;
         });
       } else {
-        document.body.innerHTML += `<p style="color:red;">❌ No access token found in URL.</p>`;
+        document.body.innerHTML += `<div class="status" style="color:red;">❌ No access token found in URL.</div>`;
       }
     };
   </script>
