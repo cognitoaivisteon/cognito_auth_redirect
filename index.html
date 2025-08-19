@@ -1,51 +1,379 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Google OAuth2 Redirect</title>
-  <meta charset="UTF-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gmail OAuth Handler</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .loading {
+            color: #666;
+        }
+
+        .success {
+            color: #4CAF50;
+        }
+
+        .error {
+            color: #f44336;
+        }
+
+        .status-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .connection-status {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        .token-preview {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            word-break: break-all;
+            color: #495057;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 20px;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .spinner {
+            animation: spin 2s linear infinite;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
 <body>
-  <h2>Authenticating with Google...</h2>
-  <p>Debug info will appear below:</p>
-  <div id="debug"></div>
+    <div class="container">
+        <div id="status">
+            <div class="loading fade-in">
+                <span class="status-icon spinner">⚡</span>
+                <h1>Gmail OAuth Handler</h1>
+                <p>Processing OAuth response...</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="connection-status" id="connectionStatus">
+                    Initializing...
+                </div>
+            </div>
+        </div>
+    </div>
 
-  <script>
-    function log(message, color = "black") {
-      const debug = document.getElementById("debug");
-      const p = document.createElement("p");
-      p.style.color = color;
-      p.textContent = message;
-      debug.appendChild(p);
-    }
+    <script>
+        // Global state
+        let websocket = null;
+        let connectionAttempts = 0;
+        let maxRetries = 5;
+        let sessionId = null;
+        let computerIP = null;
+        let websocketPort = null;
 
-    window.onload = () => {
-      const hash = window.location.hash.substr(1);
-      log("URL fragment: " + hash, "blue");
+        // Update progress bar
+        function updateProgress(percent) {
+            document.getElementById('progressFill').style.width = percent + '%';
+        }
 
-      const params = new URLSearchParams(hash);
-      const accessToken = params.get('access_token');
+        // Update connection status
+        function updateStatus(message, type = 'info') {
+            const statusElement = document.getElementById('connectionStatus');
+            statusElement.textContent = message;
+            statusElement.className = `connection-status ${type}`;
+        }
 
-      if (accessToken) {
-        log("Access token found: " + accessToken, "green");
+        // Show success state
+        function showSuccess(token) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `
+                <div class="success fade-in">
+                    <span class="status-icon">✅</span>
+                    <h1>Success!</h1>
+                    <p>OAuth token has been automatically sent to your computer.</p>
+                    <div class="token-preview">
+                        Token: ${token.substring(0, 50)}...
+                    </div>
+                    <div class="connection-status success">
+                        ✨ Fully automated! No manual steps required.
+                    </div>
+                    <p style="font-size: 14px; color: #999; margin-top: 20px;">
+                        You can close this window.
+                    </p>
+                </div>
+            `;
+            updateProgress(100);
+        }
 
-        const deviceIP = 'http://192.168.0.101:5000/token'; // Replace with your actual device IP
+        // Show error state
+        function showError(message) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `
+                <div class="error fade-in">
+                    <span class="status-icon">❌</span>
+                    <h1>Error</h1>
+                    <p>${message}</p>
+                    <button class="button" onclick="location.reload()">Try Again</button>
+                </div>
+            `;
+        }
 
-        fetch(deviceIP, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: accessToken })
-        })
-        .then(res => res.text())
-        .then(data => {
-          log("✅ Token sent to device: " + data, "green");
-        })
-        .catch(err => {
-          log("❌ Failed to send token: " + err, "red");
+        // Parse URL fragment for OAuth response
+        function parseOAuthResponse() {
+            const hash = window.location.hash.substring(1);
+            const params = {};
+            const regex = /([^&=]+)=([^&]*)/g;
+            let match;
+
+            while ((match = regex.exec(hash)) !== null) {
+                params[decodeURIComponent(match[1])] = decodeURIComponent(match[2]);
+            }
+
+            return params;
+        }
+
+        // Parse state parameter
+        function parseState(stateParam) {
+            if (!stateParam) return null;
+            const parts = stateParam.split('|');
+            if (parts.length >= 3) {
+                return {
+                    sessionId: parts[0],
+                    computerIP: parts[1],
+                    websocketPort: parts[2]
+                };
+            }
+            return null;
+        }
+
+        // Connect to WebSocket
+        function connectWebSocket() {
+            if (!computerIP || !websocketPort) {
+                showError('Missing connection information in OAuth state');
+                return;
+            }
+
+            const wsUrl = `ws://${computerIP}:${websocketPort}`;
+            updateStatus(`Connecting to ${computerIP}:${websocketPort}...`, 'info');
+
+            try {
+                websocket = new WebSocket(wsUrl);
+
+                websocket.onopen = function() {
+                    console.log('WebSocket connected');
+                    updateStatus('Connected! Sending token...', 'success');
+                    connectionAttempts = 0;
+                    updateProgress(70);
+                };
+
+                websocket.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        if (data.type === 'success') {
+                            console.log('Token sent successfully');
+                            updateProgress(90);
+                        }
+                    } catch (e) {
+                        console.log('Received:', event.data);
+                    }
+                };
+
+                websocket.onerror = function(error) {
+                    console.error('WebSocket error:', error);
+                    updateStatus(`Connection failed (attempt ${connectionAttempts + 1}/${maxRetries})`, 'error');
+                };
+
+                websocket.onclose = function() {
+                    console.log('WebSocket closed');
+                    if (connectionAttempts < maxRetries) {
+                        connectionAttempts++;
+                        updateStatus(`Retrying connection... (${connectionAttempts}/${maxRetries})`, 'warning');
+                        setTimeout(() => connectWebSocket(), 2000);
+                    } else {
+                        showError('Could not connect to your computer. Please make sure the Python script is running.');
+                    }
+                };
+
+            } catch (error) {
+                showError(`Connection error: ${error.message}`);
+            }
+        }
+
+        // Send token via WebSocket
+        function sendToken(accessToken) {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                const message = {
+                    type: 'token',
+                    session_id: sessionId,
+                    access_token: accessToken,
+                    timestamp: Date.now()
+                };
+
+                websocket.send(JSON.stringify(message));
+                console.log('Token sent via WebSocket');
+                
+                setTimeout(() => {
+                    showSuccess(accessToken);
+                }, 1000);
+            } else {
+                showError('WebSocket connection not ready');
+            }
+        }
+
+        // Main function
+        function main() {
+            updateProgress(10);
+            
+            // Parse OAuth response
+            const oauthParams = parseOAuthResponse();
+            
+            if (oauthParams.error) {
+                showError(`OAuth error: ${oauthParams.error}`);
+                return;
+            }
+
+            if (!oauthParams.access_token) {
+                showError('No access token received from Google');
+                return;
+            }
+
+            updateProgress(30);
+
+            // Parse state parameter
+            const stateInfo = parseState(oauthParams.state);
+            if (!stateInfo) {
+                showError('Invalid state parameter - missing connection info');
+                return;
+            }
+
+            sessionId = stateInfo.sessionId;
+            computerIP = stateInfo.computerIP;
+            websocketPort = stateInfo.websocketPort;
+
+            updateProgress(50);
+
+            // Connect and send token
+            connectWebSocket();
+
+            // Wait for WebSocket connection, then send token
+            const checkConnection = () => {
+                if (websocket && websocket.readyState === WebSocket.OPEN) {
+                    sendToken(oauthParams.access_token);
+                } else if (connectionAttempts < maxRetries) {
+                    setTimeout(checkConnection, 500);
+                } else {
+                    showError('Failed to establish connection after multiple attempts');
+                }
+            };
+
+            setTimeout(checkConnection, 1000);
+        }
+
+        // Start when page loads
+        window.addEventListener('load', () => {
+            setTimeout(main, 500);
         });
-      } else {
-        log("❌ No access token found in URL.", "red");
-      }
-    };
-  </script>
+
+        // Handle page visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (websocket) {
+                    websocket.close();
+                }
+            }
+        });
+    </script>
 </body>
 </html>
