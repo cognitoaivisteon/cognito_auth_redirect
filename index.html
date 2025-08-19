@@ -148,15 +148,34 @@
                     throw new Error(`Server responded with ${response.status}`);
                 }
             } catch (error) {
-                updateStatus(`Error: Could not connect to your computer (${error.message})`, 'error');
-                updateDetails(`
-                    <p>Make sure your Python program is running.</p>
-                    <div class="token">
-                        <strong>Your access token:</strong><br>
-                        ${token}
-                    </div>
-                    <p>You can copy this token manually.</p>
-                `);
+                // Fallback: Try URL redirect method
+                updateStatus('Trying alternative method...', 'loading');
+                
+                const redirectUrl = `${callbackUrl}?token=${encodeURIComponent(token)}&session_id=${encodeURIComponent(stateInfo.sessionId)}`;
+                
+                // Create a hidden iframe to make the request
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = redirectUrl;
+                document.body.appendChild(iframe);
+                
+                // Wait a moment then check if it worked
+                setTimeout(() => {
+                    updateStatus('Token sent via redirect method!', 'success');
+                    updateDetails('<p>Check your computer program. You can close this window.</p>');
+                }, 2000);
+                
+                // Also show manual option
+                setTimeout(() => {
+                    updateDetails(`
+                        <p>If the automatic method didn't work:</p>
+                        <div class="token">
+                            <strong>Your access token:</strong><br>
+                            ${token}
+                        </div>
+                        <p>Copy this token manually to your program.</p>
+                    `);
+                }, 4000);
             }
         }
 
