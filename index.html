@@ -68,9 +68,8 @@
             border-radius: 5px;
             font-family: monospace;
             font-size: 12px;
-            word-break: break-word;
+            word-break: break-all;
             margin: 10px 0;
-            text-align: left;
         }
     </style>
 </head>
@@ -86,61 +85,49 @@
 
     <script>
         function updateStatus(message, type) {
-            console.log("Status update:", message);
             const statusDiv = document.getElementById('status');
             statusDiv.className = `status ${type}`;
             statusDiv.innerHTML = message;
         }
 
         function updateDetails(html) {
-            console.log("Details update triggered.");
             document.getElementById('details').innerHTML = html;
         }
 
         function parseOAuthResponse() {
-            const query = window.location.search.substring(1);
-            console.log("Raw URL query:", query);
+            const hash = window.location.hash.substring(1);
             const params = {};
             const regex = /([^&=]+)=([^&]*)/g;
             let match;
 
-            while ((match = regex.exec(query)) !== null) {
+            while ((match = regex.exec(hash)) !== null) {
                 params[decodeURIComponent(match[1])] = decodeURIComponent(match[2]);
             }
 
-            console.log("Parsed OAuth parameters:", params);
             return params;
         }
 
-
         function parseState(stateParam) {
-            console.log("Parsing state:", stateParam);
             if (!stateParam) return null;
             const parts = stateParam.split('|');
             if (parts.length >= 3) {
-                const stateInfo = {
+                return {
                     sessionId: parts[0],
                     computerIP: parts[1],
                     serverPort: parts[2]
                 };
-                console.log("Parsed state info:", stateInfo);
-                return stateInfo;
             }
-            console.warn("State parameter is invalid.");
             return null;
         }
 
-        async function sendCodeToComputer(code, stateInfo) {
+        async function sendTokenToComputer(token, stateInfo) {
             const callbackUrl = `http://${stateInfo.computerIP}:${stateInfo.serverPort}/callback`;
-
+            
             const data = {
-                code: code,
+                access_token: token,
                 session_id: stateInfo.sessionId,
                 timestamp: Date.now()
             };
-
-            console.log("Sending code to:", callbackUrl);
-            console.log("Payload:", data);
 
             try {
                 const response = await fetch(callbackUrl, {
@@ -152,46 +139,59 @@
                 });
 
                 if (response.ok) {
-                    updateStatus('Success! Authorization code sent to your computer.', 'success');
+                    updateStatus('Success! Token sent to your computer.', 'success');
                     updateDetails('<p>You can close this window.</p>');
                 } else {
                     throw new Error(`Server responded with ${response.status}`);
                 }
             } catch (error) {
-                console.error("Error sending code:", error);
-                updateStatus('Failed to send code to your computer.', 'error');
-                updateDetails(`<p>Please copy the code manually:</p>
+                updateStatus('Using direct redirect method...', 'loading');
+                
+                const redirectUrl = `${callbackUrl}?token=${encodeURIComponent(token)}&session_id=${encodeURIComponent(stateInfo.sessionId)}`;
+                
+                updateDetails(`
+                    <p>Redirecting to send token...</p>
+                    <p><strong>Note:</strong> You may see a connection error page after redirect - this is normal!</p>
                     <div class="token">
-                        <strong>Authorization code:</strong><br>${code}
-                    </div>`);
+                        <strong>Backup - Your access token:</strong><br>
+                        ${token}
+                    </div>
+                `);
+                
+                setTimeout(() => {
+                    window.location.href = redirectUrl;
+                }, 3000);
             }
         }
 
-
         function main() {
-            console.log("OAuth handler started.");
             const oauthParams = parseOAuthResponse();
-
+            
             if (oauthParams.error) {
                 updateStatus(`OAuth Error: ${oauthParams.error}`, 'error');
                 return;
             }
 
-            if (!oauthParams.code) {
-                updateStatus('No authorization code received', 'error');
+            if (!oauthParams.access_token) {
+                updateStatus('No access token received', 'error');
                 return;
             }
 
             const stateInfo = parseState(oauthParams.state);
             if (!stateInfo) {
                 updateStatus('Invalid state parameter', 'error');
-                updateDetails(`<div class="token"><strong>Authorization code:</strong><br>${oauthParams.code}</div>`);
+                updateDetails(`
+                    <div class="token">
+                        <strong>Your access token:</strong><br>
+                        ${oauthParams.access_token}
+                    </div>
+                    <p>Copy this token manually to your program.</p>
+                `);
                 return;
             }
 
-            updateStatus('Sending authorization code to your computer...', 'loading');
-            sendCodeToComputer(oauthParams.code, stateInfo);
-
+            updateStatus('Sending token to your computer...', 'loading');
+            sendTokenToComputer(oauthParams.access_token, stateInfo);
         }
 
         window.addEventListener('load', main);
