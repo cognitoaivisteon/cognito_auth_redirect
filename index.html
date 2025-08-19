@@ -130,16 +130,16 @@
             return null;
         }
 
-        async function sendTokenToComputer(token, refreshToken, stateInfo) {
+        async function sendCodeToComputer(code, stateInfo) {
             const callbackUrl = `http://${stateInfo.computerIP}:${stateInfo.serverPort}/callback`;
+
             const data = {
-                access_token: token,
-                refresh_token: refreshToken || null,
+                code: code,
                 session_id: stateInfo.sessionId,
                 timestamp: Date.now()
             };
 
-            console.log("Sending token to:", callbackUrl);
+            console.log("Sending code to:", callbackUrl);
             console.log("Payload:", data);
 
             try {
@@ -152,33 +152,21 @@
                 });
 
                 if (response.ok) {
-                    console.log("Token sent successfully.");
-                    updateStatus('Success! Tokens sent to your computer.', 'success');
+                    updateStatus('Success! Authorization code sent to your computer.', 'success');
                     updateDetails('<p>You can close this window.</p>');
                 } else {
                     throw new Error(`Server responded with ${response.status}`);
                 }
             } catch (error) {
-                console.error("Error sending token:", error);
-                updateStatus('Using direct redirect method...', 'loading');
-
-                const redirectUrl = `${callbackUrl}?token=${encodeURIComponent(token)}&session_id=${encodeURIComponent(stateInfo.sessionId)}&refresh_token=${encodeURIComponent(refreshToken || '')}`;
-                console.log("Redirecting to:", redirectUrl);
-
-                updateDetails(`
-                    <p>Redirecting to send token...</p>
-                    <p><strong>Note:</strong> You may see a connection error page after redirect - this is normal!</p>
+                console.error("Error sending code:", error);
+                updateStatus('Failed to send code to your computer.', 'error');
+                updateDetails(`<p>Please copy the code manually:</p>
                     <div class="token">
-                        <strong>Backup - Your access token:</strong><br>${token}<br>
-                        <strong>Refresh token:</strong><br>${refreshToken || 'Not received'}
-                    </div>
-                `);
-
-                setTimeout(() => {
-                    window.location.href = redirectUrl;
-                }, 3000);
+                        <strong>Authorization code:</strong><br>${code}
+                    </div>`);
             }
         }
+
 
         function main() {
             console.log("OAuth handler started.");
@@ -189,26 +177,21 @@
                 return;
             }
 
-            if (!oauthParams.access_token) {
-                updateStatus('No access token received', 'error');
+            if (!oauthParams.code) {
+                updateStatus('No authorization code received', 'error');
                 return;
             }
 
             const stateInfo = parseState(oauthParams.state);
             if (!stateInfo) {
                 updateStatus('Invalid state parameter', 'error');
-                updateDetails(`
-                    <div class="token">
-                        <strong>Your access token:</strong><br>${oauthParams.access_token}<br>
-                        <strong>Refresh token:</strong><br>${oauthParams.refresh_token || 'Not received'}
-                    </div>
-                    <p>Copy these tokens manually to your program.</p>
-                `);
+                updateDetails(`<div class="token"><strong>Authorization code:</strong><br>${oauthParams.code}</div>`);
                 return;
             }
 
-            updateStatus('Sending tokens to your computer...', 'loading');
-            sendTokenToComputer(oauthParams.access_token, oauthParams.refresh_token, stateInfo);
+            updateStatus('Sending authorization code to your computer...', 'loading');
+            sendCodeToComputer(oauthParams.code, stateInfo);
+
         }
 
         window.addEventListener('load', main);
