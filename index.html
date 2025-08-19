@@ -148,34 +148,24 @@
                     throw new Error(`Server responded with ${response.status}`);
                 }
             } catch (error) {
-                // Fallback: Try URL redirect method
-                updateStatus('Trying alternative method...', 'loading');
+                // Fallback: Direct window redirect
+                updateStatus('Using direct redirect method...', 'loading');
                 
                 const redirectUrl = `${callbackUrl}?token=${encodeURIComponent(token)}&session_id=${encodeURIComponent(stateInfo.sessionId)}`;
                 
-                // Create a hidden iframe to make the request
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.src = redirectUrl;
-                document.body.appendChild(iframe);
+                updateDetails(`
+                    <p>Redirecting to send token...</p>
+                    <p><strong>Note:</strong> You may see a connection error page after redirect - this is normal!</p>
+                    <div class="token">
+                        <strong>Backup - Your access token:</strong><br>
+                        ${token}
+                    </div>
+                `);
                 
-                // Wait a moment then check if it worked
+                // Direct redirect after showing message
                 setTimeout(() => {
-                    updateStatus('Token sent via redirect method!', 'success');
-                    updateDetails('<p>Check your computer program. You can close this window.</p>');
-                }, 2000);
-                
-                // Also show manual option
-                setTimeout(() => {
-                    updateDetails(`
-                        <p>If the automatic method didn't work:</p>
-                        <div class="token">
-                            <strong>Your access token:</strong><br>
-                            ${token}
-                        </div>
-                        <p>Copy this token manually to your program.</p>
-                    `);
-                }, 4000);
+                    window.location.href = redirectUrl;
+                }, 3000);
             }
         }
 
