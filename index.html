@@ -94,17 +94,15 @@
             document.getElementById('details').innerHTML = html;
         }
 
-        // Parse URL hash for OAuth response
+        // Parse URL query parameters for OAuth response (authorization code flow)
         function parseOAuthResponse() {
-            const hash = window.location.hash.substring(1);
+            const urlParams = new URLSearchParams(window.location.search);
             const params = {};
-            const regex = /([^&=]+)=([^&]*)/g;
-            let match;
-
-            while ((match = regex.exec(hash)) !== null) {
-                params[decodeURIComponent(match[1])] = decodeURIComponent(match[2]);
+            
+            for (const [key, value] of urlParams) {
+                params[key] = value;
             }
-
+            
             return params;
         }
 
@@ -122,8 +120,8 @@
             return null;
         }
 
-        // Send token to Python program
-        async function sendTokenToComputer(token, stateInfo) {
+        // Send authorization code to Python program
+        async function sendCodeToComputer(authCode, stateInfo) {
             const callbackUrl = `http://${stateInfo.computerIP}:${stateInfo.serverPort}/callback`;
             
             const data = {
@@ -188,18 +186,11 @@
             const stateInfo = parseState(oauthParams.state);
             if (!stateInfo) {
                 updateStatus('Invalid state parameter', 'error');
-                updateDetails(`
-                    <div class="token">
-                        <strong>Your access token:</strong><br>
-                        ${oauthParams.access_token}
-                    </div>
-                    <p>Copy this token manually to your program.</p>
-                `);
                 return;
             }
 
-            updateStatus('Sending token to your computer...', 'loading');
-            sendTokenToComputer(oauthParams.access_token, stateInfo);
+            updateStatus('Sending authorization code to your computer...', 'loading');
+            sendCodeToComputer(oauthParams.code, stateInfo);
         }
 
         // Start when page loads
