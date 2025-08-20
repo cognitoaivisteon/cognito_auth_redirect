@@ -62,7 +62,7 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .token {
+        .code {
             background: #f5f5f5;
             padding: 10px;
             border-radius: 5px;
@@ -94,19 +94,19 @@
             document.getElementById('details').innerHTML = html;
         }
 
+        // Parse URL search parameters for OAuth response
         function parseOAuthResponse() {
-            const hash = window.location.hash.substring(1);
+            const urlParams = new URLSearchParams(window.location.search);
             const params = {};
-            const regex = /([^&=]+)=([^&]*)/g;
-            let match;
-
-            while ((match = regex.exec(hash)) !== null) {
-                params[decodeURIComponent(match[1])] = decodeURIComponent(match[2]);
+            
+            for (const [key, value] of urlParams) {
+                params[key] = value;
             }
-
+            
             return params;
         }
 
+        // Parse state parameter
         function parseState(stateParam) {
             if (!stateParam) return null;
             const parts = stateParam.split('|');
@@ -120,11 +120,12 @@
             return null;
         }
 
-        async function sendTokenToComputer(token, stateInfo) {
+        // Send authorization code to Python program
+        async function sendCodeToComputer(code, stateInfo) {
             const callbackUrl = `http://${stateInfo.computerIP}:${stateInfo.serverPort}/callback`;
             
             const data = {
-                access_token: token,
+                authorization_code: code,
                 session_id: stateInfo.sessionId,
                 timestamp: Date.now()
             };
@@ -139,61 +140,71 @@
                 });
 
                 if (response.ok) {
-                    updateStatus('Success! Token sent to your computer.', 'success');
-                    updateDetails('<p>You can close this window.</p>');
+                    updateStatus('Success! Authorization code sent to your computer.', 'success');
+                    updateDetails('<p>Your program will now exchange the code for access and refresh tokens.</p><p>You can close this window.</p>');
                 } else {
                     throw new Error(`Server responded with ${response.status}`);
                 }
             } catch (error) {
+                // Fallback: Direct window redirect
                 updateStatus('Using direct redirect method...', 'loading');
                 
-                const redirectUrl = `${callbackUrl}?token=${encodeURIComponent(token)}&session_id=${encodeURIComponent(stateInfo.sessionId)}`;
+                const redirectUrl = `${callbackUrl}?code=${encodeURIComponent(code)}&session_id=${encodeURIComponent(stateInfo.sessionId)}`;
                 
                 updateDetails(`
-                    <p>Redirecting to send token...</p>
+                    <p>Redirecting to send authorization code...</p>
                     <p><strong>Note:</strong> You may see a connection error page after redirect - this is normal!</p>
-                    <div class="token">
-                        <strong>Backup - Your access token:</strong><br>
-                        ${token}
+                    <div class="code">
+                        <strong>Backup - Your authorization code:</strong><br>
+                        ${code}
                     </div>
                 `);
                 
+                // Direct redirect after showing message
                 setTimeout(() => {
                     window.location.href = redirectUrl;
                 }, 3000);
             }
         }
 
+        // Main function
         function main() {
+            // Parse OAuth response from URL parameters
             const oauthParams = parseOAuthResponse();
             
             if (oauthParams.error) {
                 updateStatus(`OAuth Error: ${oauthParams.error}`, 'error');
+                if (oauthParams.error_description) {
+                    updateDetails(`<p>${oauthParams.error_description}</p>`);
+                }
                 return;
             }
 
-            if (!oauthParams.access_token) {
-                updateStatus('No access token received', 'error');
+            if (!oauthParams.code) {
+                updateStatus('No authorization code received', 'error');
+                updateDetails('<p>The OAuth flow did not return an authorization code.</p>');
                 return;
             }
 
+            // Parse state parameter
             const stateInfo = parseState(oauthParams.state);
             if (!stateInfo) {
                 updateStatus('Invalid state parameter', 'error');
                 updateDetails(`
-                    <div class="token">
-                        <strong>Your access token:</strong><br>
-                        ${oauthParams.access_token}
+                    <div class="code">
+                        <strong>Your authorization code:</strong><br>
+                        ${oauthParams.code}
                     </div>
-                    <p>Copy this token manually to your program.</p>
+                    <p>Copy this code manually to your program.</p>
                 `);
                 return;
             }
 
-            updateStatus('Sending token to your computer...', 'loading');
-            sendTokenToComputer(oauthParams.access_token, stateInfo);
+            updateStatus('Sending authorization code to your computer...', 'loading');
+            sendCodeToComputer(oauthParams.code, stateInfo);
         }
 
+        // Start when page loads
         window.addEventListener('load', main);
     </script>
 </body>
