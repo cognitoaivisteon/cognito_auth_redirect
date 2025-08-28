@@ -3,95 +3,262 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gmail OAuth Handler</title>
+    <title>Gmail OAuth Handler - Multi Account</title>
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
-            margin: 0;
         }
+
         .container {
             background: white;
-            border-radius: 15px;
-            padding: 30px;
-            max-width: 400px;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
             width: 100%;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
         }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
         h1 {
-            color: #333;
-            margin-bottom: 20px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 28px;
+            font-weight: 600;
         }
+
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
         .status {
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
         }
+
         .loading {
-            background: #e3f2fd;
-            border: 1px solid #2196F3;
-            color: #1976D2;
+            background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+            border: 2px solid #2196F3;
+            color: #1565C0;
         }
+
         .success {
-            background: #e8f5e8;
-            border: 1px solid #4CAF50;
+            background: linear-gradient(135deg, #e8f5e8, #f1f8e9);
+            border: 2px solid #4CAF50;
             color: #2E7D32;
         }
+
         .error {
-            background: #ffebee;
-            border: 1px solid #f44336;
+            background: linear-gradient(135deg, #ffebee, #fce4ec);
+            border: 2px solid #f44336;
             color: #c62828;
         }
+
+        .warning {
+            background: linear-gradient(135deg, #fff8e1, #fffde7);
+            border: 2px solid #ff9800;
+            color: #f57c00;
+        }
+
         .spinner {
-            display: inline-block;
             width: 20px;
             height: 20px;
-            border: 3px solid #f3f3f3;
+            border: 3px solid rgba(33, 150, 243, 0.3);
             border-top: 3px solid #2196F3;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-right: 10px;
         }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .details {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
         .code {
-            background: #f5f5f5;
-            padding: 10px;
-            border-radius: 5px;
-            font-family: monospace;
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
             font-size: 12px;
             word-break: break-all;
+            margin: 15px 0;
+            position: relative;
+        }
+
+        .code::before {
+            content: 'Authorization Code';
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            background: #34495e;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+
+        .device-info {
+            background: #f1c40f;
+            color: #f39c12;
+            padding: 10px;
+            border-radius: 8px;
             margin: 10px 0;
+            font-size: 12px;
+        }
+
+        .redirect-info {
+            background: #3498db;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .countdown {
+            font-size: 18px;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+        }
+
+        .check-icon {
+            color: #27ae60;
+            font-size: 24px;
+        }
+
+        .error-icon {
+            color: #e74c3c;
+            font-size: 24px;
+        }
+
+        .warning-icon {
+            color: #f39c12;
+            font-size: 24px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Gmail OAuth Handler</h1>
-        <div id="status" class="status loading">
+        <div class="subtitle">Multi-Account Authentication System</div>
+        
+        <div id="status" class="status loading pulse">
             <div class="spinner"></div>
-            Processing OAuth response...
+            <span>Processing OAuth response...</span>
         </div>
+        
         <div id="details"></div>
     </div>
 
     <script>
-        function updateStatus(message, type) {
+        let countdownTimer = null;
+
+        function updateStatus(message, type, icon = null) {
             const statusDiv = document.getElementById('status');
             statusDiv.className = `status ${type}`;
-            statusDiv.innerHTML = message;
+            
+            let iconHtml = '';
+            if (type === 'success') {
+                iconHtml = '<span class="check-icon">✓</span>';
+            } else if (type === 'error') {
+                iconHtml = '<span class="error-icon">✗</span>';
+            } else if (type === 'warning') {
+                iconHtml = '<span class="warning-icon">⚠</span>';
+            } else if (type === 'loading') {
+                iconHtml = '<div class="spinner"></div>';
+            }
+            
+            statusDiv.innerHTML = `${iconHtml}<span>${message}</span>`;
         }
 
         function updateDetails(html) {
             document.getElementById('details').innerHTML = html;
+        }
+
+        function startCountdown(seconds, callback) {
+            let remaining = seconds;
+            const countdownElement = document.querySelector('.countdown');
+            
+            countdownTimer = setInterval(() => {
+                if (countdownElement) {
+                    countdownElement.textContent = remaining;
+                }
+                remaining--;
+                
+                if (remaining < 0) {
+                    clearInterval(countdownTimer);
+                    if (callback) callback();
+                }
+            }, 1000);
         }
 
         // Parse URL search parameters for OAuth response
@@ -106,7 +273,7 @@
             return params;
         }
 
-        // Parse state parameter
+        // Parse state parameter - now includes email hint
         function parseState(stateParam) {
             if (!stateParam) return null;
             const parts = stateParam.split('|');
@@ -114,7 +281,8 @@
                 return {
                     sessionId: parts[0],
                     computerIP: parts[1],
-                    serverPort: parts[2]
+                    serverPort: parts[2],
+                    emailHint: parts[3] || ''
                 };
             }
             return null;
@@ -127,10 +295,18 @@
             const data = {
                 authorization_code: code,
                 session_id: stateInfo.sessionId,
-                timestamp: Date.now()
+                email_hint: stateInfo.emailHint,
+                timestamp: Date.now(),
+                device_info: {
+                    userAgent: navigator.userAgent,
+                    platform: navigator.platform,
+                    language: navigator.language
+                }
             };
 
             try {
+                updateStatus('Sending authorization code to your computer...', 'loading');
+                
                 const response = await fetch(callbackUrl, {
                     method: 'POST',
                     headers: {
@@ -140,30 +316,73 @@
                 });
 
                 if (response.ok) {
+                    const result = await response.json();
                     updateStatus('Success! Authorization code sent to your computer.', 'success');
-                    updateDetails('<p>Your program will now exchange the code for access and refresh tokens.</p><p>You can close this window.</p>');
+                    
+                    let detailsHtml = `
+                        <div class="details">
+                            <h3>✓ Authentication Complete</h3>
+                            <p><strong>Session ID:</strong> ${stateInfo.sessionId}</p>
+                    `;
+                    
+                    if (stateInfo.emailHint) {
+                        detailsHtml += `<p><strong>Account:</strong> ${stateInfo.emailHint}</p>`;
+                    }
+                    
+                    detailsHtml += `
+                            <p><strong>Computer:</strong> ${stateInfo.computerIP}:${stateInfo.serverPort}</p>
+                            <p>Your program will now exchange the code for access and refresh tokens.</p>
+                            <p><em>You can safely close this window.</em></p>
+                        </div>
+                    `;
+                    
+                    updateDetails(detailsHtml);
                 } else {
                     throw new Error(`Server responded with ${response.status}`);
                 }
             } catch (error) {
+                console.log('Direct POST failed, trying URL redirect method...', error);
+                
                 // Fallback: Direct window redirect
-                updateStatus('Using direct redirect method...', 'loading');
+                updateStatus('Using direct redirect method...', 'warning');
                 
                 const redirectUrl = `${callbackUrl}?code=${encodeURIComponent(code)}&session_id=${encodeURIComponent(stateInfo.sessionId)}`;
                 
-                updateDetails(`
-                    <p>Redirecting to send authorization code...</p>
-                    <p><strong>Note:</strong> You may see a connection error page after redirect - this is normal!</p>
-                    <div class="code">
-                        <strong>Backup - Your authorization code:</strong><br>
-                        ${code}
-                    </div>
-                `);
+                let detailsHtml = `
+                    <div class="details">
+                        <h3>🔄 Using Backup Method</h3>
+                        <p>Redirecting to send authorization code...</p>
+                        <div class="redirect-info">
+                            <p><strong>Note:</strong> You may see a connection error page after redirect.</p>
+                            <p>This is normal - your authorization code has been received!</p>
+                        </div>
+                `;
                 
-                // Direct redirect after showing message
-                setTimeout(() => {
+                if (stateInfo.emailHint) {
+                    detailsHtml += `<p><strong>Account:</strong> ${stateInfo.emailHint}</p>`;
+                }
+                
+                detailsHtml += `
+                        <div class="device-info">
+                            <p><strong>Session:</strong> ${stateInfo.sessionId}</p>
+                            <p><strong>Target:</strong> ${stateInfo.computerIP}:${stateInfo.serverPort}</p>
+                        </div>
+                        
+                        <p>Redirecting in <span class="countdown">5</span> seconds...</p>
+                        
+                        <div class="code">
+                            <strong>Backup - Your authorization code:</strong><br>
+                            ${code}
+                        </div>
+                    </div>
+                `;
+                
+                updateDetails(detailsHtml);
+                
+                // Countdown and redirect
+                startCountdown(5, () => {
                     window.location.href = redirectUrl;
-                }, 3000);
+                });
             }
         }
 
@@ -174,38 +393,98 @@
             
             if (oauthParams.error) {
                 updateStatus(`OAuth Error: ${oauthParams.error}`, 'error');
+                
+                let errorDetails = `
+                    <div class="details">
+                        <h3>❌ Authentication Failed</h3>
+                        <p><strong>Error:</strong> ${oauthParams.error}</p>
+                `;
+                
                 if (oauthParams.error_description) {
-                    updateDetails(`<p>${oauthParams.error_description}</p>`);
+                    errorDetails += `<p><strong>Description:</strong> ${oauthParams.error_description}</p>`;
                 }
+                
+                errorDetails += `
+                        <p>Please try the authentication process again.</p>
+                        <p>If the problem persists, check your OAuth configuration.</p>
+                    </div>
+                `;
+                
+                updateDetails(errorDetails);
                 return;
             }
 
             if (!oauthParams.code) {
                 updateStatus('No authorization code received', 'error');
-                updateDetails('<p>The OAuth flow did not return an authorization code.</p>');
+                updateDetails(`
+                    <div class="details">
+                        <h3>❌ Missing Authorization Code</h3>
+                        <p>The OAuth flow did not return an authorization code.</p>
+                        <p>This might happen if:</p>
+                        <ul style="text-align: left; margin: 10px 0;">
+                            <li>The authentication was cancelled</li>
+                            <li>There was a network error</li>
+                            <li>The OAuth configuration is incorrect</li>
+                        </ul>
+                        <p>Please try again.</p>
+                    </div>
+                `);
                 return;
             }
 
             // Parse state parameter
             const stateInfo = parseState(oauthParams.state);
             if (!stateInfo) {
-                updateStatus('Invalid state parameter', 'error');
+                updateStatus('Invalid state parameter', 'warning');
+                
                 updateDetails(`
-                    <div class="code">
-                        <strong>Your authorization code:</strong><br>
-                        ${oauthParams.code}
+                    <div class="details">
+                        <h3>⚠ Invalid Session State</h3>
+                        <p>The session state parameter is missing or invalid.</p>
+                        <p>Your authorization code is still valid:</p>
+                        
+                        <div class="code">
+                            <strong>Your authorization code:</strong><br>
+                            ${oauthParams.code}
+                        </div>
+                        
+                        <p>Copy this code manually to your program.</p>
+                        <p><em>Make sure your program is still running and waiting for the code.</em></p>
                     </div>
-                    <p>Copy this code manually to your program.</p>
                 `);
                 return;
             }
 
-            updateStatus('Sending authorization code to your computer...', 'loading');
+            // Show processing status with account info
+            let processingMessage = 'Connecting to your computer...';
+            if (stateInfo.emailHint) {
+                processingMessage = `Authenticating ${stateInfo.emailHint}...`;
+            }
+            
+            updateStatus(processingMessage, 'loading');
+            
+            // Send the code
             sendCodeToComputer(oauthParams.code, stateInfo);
         }
 
         // Start when page loads
-        window.addEventListener('load', main);
+        window.addEventListener('load', () => {
+            setTimeout(main, 500); // Small delay for better UX
+        });
+
+        // Handle page visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && countdownTimer) {
+                clearInterval(countdownTimer);
+            }
+        });
+
+        // Handle before unload
+        window.addEventListener('beforeunload', () => {
+            if (countdownTimer) {
+                clearInterval(countdownTimer);
+            }
+        });
     </script>
 </body>
 </html>
